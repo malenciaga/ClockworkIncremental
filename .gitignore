@@ -1,0 +1,13 @@
+# OS and editor noise
+.DS_Store
+Thumbs.db
+*.tmp
+*.log
+
+# Machine-local Impeccable settings; keep shared config tracked
+.impeccable/config.local.json
+
+# Generated/local Rojo artifacts
+/rojo.exe
+/sourcemap.json
+

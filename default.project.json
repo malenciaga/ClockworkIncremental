@@ -1,0 +1,37 @@
+{
+  "name": "ClockworkIncremental",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Clockwork": {
+        "$className": "Folder",
+        "Shared": {
+          "$path": "src/ReplicatedStorage/Clockwork/Shared"
+        },
+        "Remotes": {
+          "$className": "Folder",
+          "EconomySnapshot": {
+            "$className": "RemoteEvent"
+          },
+          "PurchaseUpgrade": {
+            "$className": "RemoteEvent"
+          }
+        }
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "ClockworkServer": {
+        "$path": "src/ServerScriptService/ClockworkServer"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "$path": "src/StarterPlayer/StarterPlayerScripts"
+      }
+    }
+  }
+}
