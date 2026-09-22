@@ -7,7 +7,8 @@ export type UpgradeDefinition = {
 	BaseCost: number,
 	CostMultiplier: number,
 	ProductionCurrency: string,
-	ProductionPerLevel: number,
+	FlatProductionPerLevel: number?,
+	ProductionMultiplierPerLevel: number?,
 }
 
 local BalanceConfig = {}
@@ -24,7 +25,16 @@ local UPGRADES: { [string]: UpgradeDefinition } = {
 		BaseCost = 10,
 		CostMultiplier = 1.5,
 		ProductionCurrency = "Ticks",
-		ProductionPerLevel = 1,
+		FlatProductionPerLevel = 1,
+	},
+	PrecisionGears = {
+		DisplayName = "Precision Gears",
+		Description = "x1.25 Tick production per level",
+		CostCurrency = "Ticks",
+		BaseCost = 50,
+		CostMultiplier = 1.75,
+		ProductionCurrency = "Ticks",
+		ProductionMultiplierPerLevel = 1.25,
 	},
 }
 
@@ -53,16 +63,23 @@ function BalanceConfig.CreateDefaultUpgradeLevels(): { [string]: number }
 end
 
 function BalanceConfig.CalculateProduction(currencyName: string, upgradeLevels: { [string]: number }): number
-	local total = BASE_PRODUCTION[currencyName] or 0
+	local flatProduction = BASE_PRODUCTION[currencyName] or 0
+	local productionMultiplier = 1
 
 	for upgradeId, level in upgradeLevels do
 		local definition = UPGRADES[upgradeId]
 		if definition and definition.ProductionCurrency == currencyName then
-			total += level * definition.ProductionPerLevel
+			if definition.FlatProductionPerLevel then
+				flatProduction += level * definition.FlatProductionPerLevel
+			end
+
+			if definition.ProductionMultiplierPerLevel then
+				productionMultiplier *= definition.ProductionMultiplierPerLevel ^ level
+			end
 		end
 	end
 
-	return total
+	return flatProduction * productionMultiplier
 end
 
 return BalanceConfig

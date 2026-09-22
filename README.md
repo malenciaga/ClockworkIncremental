@@ -1,8 +1,9 @@
 # Clockwork Incremental — foundation
 
-This project implements the initial Ticks loop and the Stronger Spring upgrade:
-authoritative server data, Tick generation, purchasing, and a read-only economy
-UI. It intentionally contains no other upgrades or later progression systems.
+This project implements the initial Ticks loop and two early upgrades, Stronger
+Spring and Precision Gears: authoritative server data, Tick generation,
+purchasing, and a server-driven economy UI. It intentionally contains no later
+progression systems.
 
 ## Roblox Studio placement
 
@@ -47,8 +48,9 @@ suffixes used by Rojo map as follows:
 
 ## Responsibilities
 
-- `BalanceConfig` is the single source of truth for base production, Stronger
-  Spring's definition, and its exponential cost formula.
+- `BalanceConfig` is the single source of truth for base production, upgrade
+  definitions, exponential costs, and the ordered flat-then-multiplicative
+  production formula.
 - `PlayerDataTemplate` is the versioned shape of a new player's data. Currency
   balances, upgrade levels, and production rates are separate dictionaries.
 - `PlayerDataService` owns loaded server profiles. It is deliberately the only
@@ -64,9 +66,8 @@ suffixes used by Rojo map as follows:
   cleanup together.
 - `NumberFormatter` is shared display code. It abbreviates thousands through
   vigintillions and uses scientific notation beyond its named suffix list.
-- `ClockworkUI` creates the economy and Stronger Spring panels. It only renders
-  snapshots received from the server and never predicts costs, levels, or
-  currency.
+- `ClockworkUI` creates the economy and upgrade panels. It only renders snapshots
+  received from the server and never predicts costs, levels, or currency.
 
 ## Authority and networking
 
@@ -76,9 +77,9 @@ The server sends full display snapshots through `EconomySnapshot` after each
 award. A client can ask the same RemoteEvent for a fresh snapshot, but it sends
 no amount or rate, and the server throttles requests to one per second.
 
-Clicking BUY sends only the `StrongerSpring` identifier through
-`PurchaseUpgrade`. `UpgradeService` confirms the player and upgrade, calculates
-the current cost from `BalanceConfig`, checks and subtracts the server balance,
+Clicking BUY sends only an upgrade identifier through `PurchaseUpgrade`.
+`UpgradeService` confirms the player and configured upgrade, calculates the
+current cost from `BalanceConfig`, checks and subtracts the server balance,
 increments the server level, recalculates Ticks per second, and publishes a new
 snapshot. Failed requests do not mutate data.
 
@@ -99,6 +100,12 @@ game can continue calling the same service and economy APIs.
 6. At 10 or more Ticks, BUY should subtract 10 Ticks, show Level 1, update the
    next cost to 15 Ticks, and change production to `+2 Ticks / second`.
 7. The next successful purchase should show Level 2 and `+3 Ticks / second`.
-8. In a server-side test, setting a balance to `1000`, `1000000`, or
+8. Precision Gears should begin at Level 0 with a cost of 50 Ticks.
+9. With Stronger Spring at Level 3, buying Precision Gears once should change
+   production from `+4` to `+5 Ticks / second`; buying it twice should change
+   production to `+6.25 Ticks / second`.
+10. Precision Gears' next costs should be 88 Ticks at Level 1 and 153 Ticks at
+    Level 2.
+11. In a server-side test, setting a balance to `1000`, `1000000`, or
    `1000000000` through `EconomyService` displays `1K`, `1M`, or `1B` after
    `EconomyService.Publish(player)`.

@@ -21,10 +21,14 @@ local panel = Instance.new("Frame")
 panel.Name = "TicksPanel"
 panel.AnchorPoint = Vector2.new(0.5, 0)
 panel.Position = UDim2.fromScale(0.5, 0.04)
-panel.Size = UDim2.fromOffset(360, 112)
+panel.Size = UDim2.new(1, -24, 0, 112)
 panel.BackgroundColor3 = Color3.fromRGB(29, 24, 19)
 panel.BorderSizePixel = 0
 panel.Parent = screenGui
+
+local panelConstraint = Instance.new("UISizeConstraint")
+panelConstraint.MaxSize = Vector2.new(360, 112)
+panelConstraint.Parent = panel
 
 local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(0, 12)
@@ -85,99 +89,150 @@ rate.TextColor3 = Color3.fromRGB(196, 181, 151)
 rate.TextSize = 18
 rate.Parent = panel
 
-local upgradePanel = Instance.new("Frame")
-upgradePanel.Name = "StrongerSpringPanel"
-upgradePanel.AnchorPoint = Vector2.new(0.5, 0)
-upgradePanel.Position = UDim2.new(0.5, 0, 0.04, 126)
-upgradePanel.Size = UDim2.fromOffset(360, 190)
-upgradePanel.BackgroundColor3 = Color3.fromRGB(29, 24, 19)
-upgradePanel.BorderSizePixel = 0
-upgradePanel.Parent = screenGui
+local upgradesList = Instance.new("ScrollingFrame")
+upgradesList.Name = "UpgradesList"
+upgradesList.AnchorPoint = Vector2.new(0.5, 0)
+upgradesList.Position = UDim2.new(0.5, 0, 0.04, 126)
+upgradesList.Size = UDim2.new(1, -24, 0.96, -142)
+upgradesList.AutomaticCanvasSize = Enum.AutomaticSize.Y
+upgradesList.CanvasSize = UDim2.fromOffset(0, 0)
+upgradesList.BackgroundTransparency = 1
+upgradesList.BorderSizePixel = 0
+upgradesList.ScrollBarImageColor3 = Color3.fromRGB(184, 137, 65)
+upgradesList.ScrollBarThickness = 6
+upgradesList.ScrollingDirection = Enum.ScrollingDirection.Y
+upgradesList.VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar
+upgradesList.Parent = screenGui
 
-local upgradeCorner = Instance.new("UICorner")
-upgradeCorner.CornerRadius = UDim.new(0, 12)
-upgradeCorner.Parent = upgradePanel
+local upgradesListConstraint = Instance.new("UISizeConstraint")
+upgradesListConstraint.MaxSize = Vector2.new(360, 10_000)
+upgradesListConstraint.Parent = upgradesList
 
-local upgradeStroke = Instance.new("UIStroke")
-upgradeStroke.Color = Color3.fromRGB(184, 137, 65)
-upgradeStroke.Thickness = 2
-upgradeStroke.Transparency = 0.15
-upgradeStroke.Parent = upgradePanel
+local upgradesLayout = Instance.new("UIListLayout")
+upgradesLayout.FillDirection = Enum.FillDirection.Vertical
+upgradesLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+upgradesLayout.SortOrder = Enum.SortOrder.LayoutOrder
+upgradesLayout.Padding = UDim.new(0, 12)
+upgradesLayout.Parent = upgradesList
 
-local upgradePadding = Instance.new("UIPadding")
-upgradePadding.PaddingLeft = UDim.new(0, 20)
-upgradePadding.PaddingRight = UDim.new(0, 20)
-upgradePadding.PaddingTop = UDim.new(0, 14)
-upgradePadding.PaddingBottom = UDim.new(0, 14)
-upgradePadding.Parent = upgradePanel
+type UpgradeView = {
+	Title: TextLabel,
+	Level: TextLabel,
+	Cost: TextLabel,
+	Effect: TextLabel,
+}
 
-local upgradeLayout = Instance.new("UIListLayout")
-upgradeLayout.FillDirection = Enum.FillDirection.Vertical
-upgradeLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-upgradeLayout.SortOrder = Enum.SortOrder.LayoutOrder
-upgradeLayout.Padding = UDim.new(0, 5)
-upgradeLayout.Parent = upgradePanel
+local upgradeViews: { [string]: UpgradeView } = {}
 
-local upgradeTitle = Instance.new("TextLabel")
-upgradeTitle.Name = "UpgradeName"
-upgradeTitle.LayoutOrder = 1
-upgradeTitle.Size = UDim2.new(1, 0, 0, 28)
-upgradeTitle.BackgroundTransparency = 1
-upgradeTitle.Font = Enum.Font.GothamBold
-upgradeTitle.Text = "Stronger Spring"
-upgradeTitle.TextColor3 = Color3.fromRGB(244, 208, 128)
-upgradeTitle.TextSize = 22
-upgradeTitle.Parent = upgradePanel
+local function createUpgradePanel(upgradeId: string, displayName: string, description: string, layoutOrder: number)
+	local upgradePanel = Instance.new("Frame")
+	upgradePanel.Name = upgradeId .. "Panel"
+	upgradePanel.LayoutOrder = layoutOrder
+	upgradePanel.Size = UDim2.new(1, -8, 0, 190)
+	upgradePanel.BackgroundColor3 = Color3.fromRGB(29, 24, 19)
+	upgradePanel.BorderSizePixel = 0
+	upgradePanel.Parent = upgradesList
 
-local upgradeLevel = Instance.new("TextLabel")
-upgradeLevel.Name = "UpgradeLevel"
-upgradeLevel.LayoutOrder = 2
-upgradeLevel.Size = UDim2.new(1, 0, 0, 20)
-upgradeLevel.BackgroundTransparency = 1
-upgradeLevel.Font = Enum.Font.GothamMedium
-upgradeLevel.Text = "Level --"
-upgradeLevel.TextColor3 = Color3.fromRGB(220, 210, 190)
-upgradeLevel.TextSize = 17
-upgradeLevel.Parent = upgradePanel
+	local upgradeCorner = Instance.new("UICorner")
+	upgradeCorner.CornerRadius = UDim.new(0, 12)
+	upgradeCorner.Parent = upgradePanel
 
-local upgradeCost = Instance.new("TextLabel")
-upgradeCost.Name = "UpgradeCost"
-upgradeCost.LayoutOrder = 3
-upgradeCost.Size = UDim2.new(1, 0, 0, 20)
-upgradeCost.BackgroundTransparency = 1
-upgradeCost.Font = Enum.Font.GothamMedium
-upgradeCost.Text = "Cost: --"
-upgradeCost.TextColor3 = Color3.fromRGB(220, 210, 190)
-upgradeCost.TextSize = 17
-upgradeCost.Parent = upgradePanel
+	local upgradeStroke = Instance.new("UIStroke")
+	upgradeStroke.Color = Color3.fromRGB(184, 137, 65)
+	upgradeStroke.Thickness = 2
+	upgradeStroke.Transparency = 0.15
+	upgradeStroke.Parent = upgradePanel
 
-local upgradeEffect = Instance.new("TextLabel")
-upgradeEffect.Name = "UpgradeEffect"
-upgradeEffect.LayoutOrder = 4
-upgradeEffect.Size = UDim2.new(1, 0, 0, 20)
-upgradeEffect.BackgroundTransparency = 1
-upgradeEffect.Font = Enum.Font.Gotham
-upgradeEffect.Text = "+1 Tick/sec per level"
-upgradeEffect.TextColor3 = Color3.fromRGB(196, 181, 151)
-upgradeEffect.TextSize = 15
-upgradeEffect.Parent = upgradePanel
+	local upgradePadding = Instance.new("UIPadding")
+	upgradePadding.PaddingLeft = UDim.new(0, 20)
+	upgradePadding.PaddingRight = UDim.new(0, 20)
+	upgradePadding.PaddingTop = UDim.new(0, 14)
+	upgradePadding.PaddingBottom = UDim.new(0, 14)
+	upgradePadding.Parent = upgradePanel
 
-local buyButton = Instance.new("TextButton")
-buyButton.Name = "BuyButton"
-buyButton.LayoutOrder = 5
-buyButton.Size = UDim2.new(1, 0, 0, 40)
-buyButton.BackgroundColor3 = Color3.fromRGB(139, 91, 38)
-buyButton.BorderSizePixel = 0
-buyButton.AutoButtonColor = true
-buyButton.Font = Enum.Font.GothamBold
-buyButton.Text = "BUY"
-buyButton.TextColor3 = Color3.fromRGB(255, 239, 202)
-buyButton.TextSize = 18
-buyButton.Parent = upgradePanel
+	local upgradeLayout = Instance.new("UIListLayout")
+	upgradeLayout.FillDirection = Enum.FillDirection.Vertical
+	upgradeLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	upgradeLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	upgradeLayout.Padding = UDim.new(0, 5)
+	upgradeLayout.Parent = upgradePanel
 
-local buyCorner = Instance.new("UICorner")
-buyCorner.CornerRadius = UDim.new(0, 8)
-buyCorner.Parent = buyButton
+	local upgradeTitle = Instance.new("TextLabel")
+	upgradeTitle.Name = "UpgradeName"
+	upgradeTitle.LayoutOrder = 1
+	upgradeTitle.Size = UDim2.new(1, 0, 0, 28)
+	upgradeTitle.BackgroundTransparency = 1
+	upgradeTitle.Font = Enum.Font.GothamBold
+	upgradeTitle.Text = displayName
+	upgradeTitle.TextColor3 = Color3.fromRGB(244, 208, 128)
+	upgradeTitle.TextSize = 22
+	upgradeTitle.Parent = upgradePanel
+
+	local upgradeLevel = Instance.new("TextLabel")
+	upgradeLevel.Name = "UpgradeLevel"
+	upgradeLevel.LayoutOrder = 2
+	upgradeLevel.Size = UDim2.new(1, 0, 0, 20)
+	upgradeLevel.BackgroundTransparency = 1
+	upgradeLevel.Font = Enum.Font.GothamMedium
+	upgradeLevel.Text = "Level --"
+	upgradeLevel.TextColor3 = Color3.fromRGB(220, 210, 190)
+	upgradeLevel.TextSize = 17
+	upgradeLevel.Parent = upgradePanel
+
+	local upgradeCost = Instance.new("TextLabel")
+	upgradeCost.Name = "UpgradeCost"
+	upgradeCost.LayoutOrder = 3
+	upgradeCost.Size = UDim2.new(1, 0, 0, 20)
+	upgradeCost.BackgroundTransparency = 1
+	upgradeCost.Font = Enum.Font.GothamMedium
+	upgradeCost.Text = "Cost: --"
+	upgradeCost.TextColor3 = Color3.fromRGB(220, 210, 190)
+	upgradeCost.TextSize = 17
+	upgradeCost.Parent = upgradePanel
+
+	local upgradeEffect = Instance.new("TextLabel")
+	upgradeEffect.Name = "UpgradeEffect"
+	upgradeEffect.LayoutOrder = 4
+	upgradeEffect.Size = UDim2.new(1, 0, 0, 20)
+	upgradeEffect.BackgroundTransparency = 1
+	upgradeEffect.Font = Enum.Font.Gotham
+	upgradeEffect.Text = description
+	upgradeEffect.TextColor3 = Color3.fromRGB(196, 181, 151)
+	upgradeEffect.TextSize = 15
+	upgradeEffect.Parent = upgradePanel
+
+	local buyButton = Instance.new("TextButton")
+	buyButton.Name = "BuyButton"
+	buyButton.LayoutOrder = 5
+	buyButton.Size = UDim2.new(1, 0, 0, 44)
+	buyButton.BackgroundColor3 = Color3.fromRGB(139, 91, 38)
+	buyButton.BorderSizePixel = 0
+	buyButton.AutoButtonColor = true
+	buyButton.Font = Enum.Font.GothamBold
+	buyButton.Text = "BUY"
+	buyButton.TextColor3 = Color3.fromRGB(255, 239, 202)
+	buyButton.TextSize = 18
+	buyButton.Parent = upgradePanel
+
+	local buyCorner = Instance.new("UICorner")
+	buyCorner.CornerRadius = UDim.new(0, 8)
+	buyCorner.Parent = buyButton
+
+	buyButton.Activated:Connect(function()
+		-- The identifier is only a request. Cost, affordability, and results are server-owned.
+		purchaseUpgrade:FireServer(upgradeId)
+	end)
+
+	upgradeViews[upgradeId] = {
+		Title = upgradeTitle,
+		Level = upgradeLevel,
+		Cost = upgradeCost,
+		Effect = upgradeEffect,
+	}
+end
+
+createUpgradePanel("StrongerSpring", "Stronger Spring", "+1 Tick/sec per level", 1)
+createUpgradePanel("PrecisionGears", "Precision Gears", "x1.25 Tick production per level", 2)
 
 local function renderSnapshot(snapshot: any)
 	if type(snapshot) ~= "table" then
@@ -204,38 +259,31 @@ local function renderSnapshot(snapshot: any)
 		return
 	end
 
-	local strongerSpring = upgrades.StrongerSpring
-	if type(strongerSpring) ~= "table" then
-		return
+	for upgradeId, upgradeView in upgradeViews do
+		local upgrade = upgrades[upgradeId]
+		if type(upgrade) == "table" then
+			local level = upgrade.Level
+			local cost = upgrade.Cost
+			local displayName = upgrade.DisplayName
+			local description = upgrade.Description
+			local costCurrency = upgrade.CostCurrency
+			if
+				type(level) == "number"
+				and type(cost) == "number"
+				and type(displayName) == "string"
+				and type(description) == "string"
+				and type(costCurrency) == "string"
+			then
+				upgradeView.Title.Text = displayName
+				upgradeView.Level.Text = "Level " .. NumberFormatter.Format(level)
+				upgradeView.Cost.Text = "Cost: " .. NumberFormatter.Format(cost) .. " " .. costCurrency
+				upgradeView.Effect.Text = description
+			end
+		end
 	end
-
-	local level = strongerSpring.Level
-	local cost = strongerSpring.Cost
-	local displayName = strongerSpring.DisplayName
-	local description = strongerSpring.Description
-	local costCurrency = strongerSpring.CostCurrency
-	if
-		type(level) ~= "number"
-		or type(cost) ~= "number"
-		or type(displayName) ~= "string"
-		or type(description) ~= "string"
-		or type(costCurrency) ~= "string"
-	then
-		return
-	end
-
-	upgradeTitle.Text = displayName
-	upgradeLevel.Text = "Level " .. NumberFormatter.Format(level)
-	upgradeCost.Text = "Cost: " .. NumberFormatter.Format(cost) .. " " .. costCurrency
-	upgradeEffect.Text = description
 end
 
 economySnapshot.OnClientEvent:Connect(renderSnapshot)
-
-buyButton.Activated:Connect(function()
-	-- The identifier is only a request. Cost, affordability, and results are server-owned.
-	purchaseUpgrade:FireServer("StrongerSpring")
-end)
 
 -- This carries no economy values; it only asks the server to resend its truth.
 economySnapshot:FireServer()

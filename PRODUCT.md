@@ -47,7 +47,7 @@ Systems beyond Paradox should be considered only after the preceding layers are 
 
 ## Capabilities and Constraints
 
-- The current foundation produces Ticks once per second and offers the Stronger Spring upgrade, which adds one Tick per second per level at an exponentially increasing cost.
+- The current foundation produces Ticks once per second and offers two early upgrades: Stronger Spring adds one Tick per second per level, then Precision Gears multiplies total Tick production by 1.25 per level. Both use exponentially increasing costs.
 - Economy and progression remain server-authoritative. Clients may request actions but never decide balances, prices, rewards, prestige gains, or progression state.
 - The UI renders authoritative snapshots and must not become a source of gameplay truth.
 - Shared formulas and balance values require clear authoritative locations rather than duplication.

@@ -29,7 +29,7 @@ local PlayerDataTemplate = {}
 local defaultUpgradeLevels = BalanceConfig.CreateDefaultUpgradeLevels()
 
 local TEMPLATE: PlayerData = {
-	SchemaVersion = 2,
+	SchemaVersion = 3,
 	Currencies = {
 		Ticks = 0,
 	},
