@@ -2,8 +2,10 @@
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
 
 local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
 local clockwork = ReplicatedStorage:WaitForChild("Clockwork")
 local shared = clockwork:WaitForChild("Shared")
 local remotes = clockwork:WaitForChild("Remotes")
@@ -15,224 +17,315 @@ local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "ClockworkUI"
 screenGui.ResetOnSpawn = false
 screenGui.IgnoreGuiInset = false
-screenGui.Parent = player:WaitForChild("PlayerGui")
+screenGui.Parent = playerGui
 
-local panel = Instance.new("Frame")
-panel.Name = "TicksPanel"
-panel.AnchorPoint = Vector2.new(0.5, 0)
-panel.Position = UDim2.fromScale(0.5, 0.04)
-panel.Size = UDim2.new(1, -24, 0, 112)
-panel.BackgroundColor3 = Color3.fromRGB(29, 24, 19)
-panel.BorderSizePixel = 0
-panel.Parent = screenGui
+local statsPanel = Instance.new("Frame")
+statsPanel.Name = "StatsPanel"
+statsPanel.AnchorPoint = Vector2.new(0, 0.5)
+statsPanel.Position = UDim2.new(0, 12, 0.5, 0)
+statsPanel.Size = UDim2.new(0.34, 0, 0, 145)
+statsPanel.BackgroundColor3 = Color3.fromRGB(29, 24, 19)
+statsPanel.BorderSizePixel = 0
+statsPanel.Parent = screenGui
 
 local panelConstraint = Instance.new("UISizeConstraint")
-panelConstraint.MaxSize = Vector2.new(360, 112)
-panelConstraint.Parent = panel
+panelConstraint.MinSize = Vector2.new(178, 145)
+panelConstraint.MaxSize = Vector2.new(214, 145)
+panelConstraint.Parent = statsPanel
 
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 12)
-corner.Parent = panel
+local panelCorner = Instance.new("UICorner")
+panelCorner.CornerRadius = UDim.new(0, 10)
+panelCorner.Parent = statsPanel
 
-local stroke = Instance.new("UIStroke")
-stroke.Color = Color3.fromRGB(184, 137, 65)
-stroke.Thickness = 2
-stroke.Transparency = 0.15
-stroke.Parent = panel
+local panelStroke = Instance.new("UIStroke")
+panelStroke.Color = Color3.fromRGB(184, 137, 65)
+panelStroke.Thickness = 2
+panelStroke.Transparency = 0.1
+panelStroke.Parent = statsPanel
 
-local gradient = Instance.new("UIGradient")
-gradient.Color = ColorSequence.new({
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(47, 38, 27)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(24, 21, 18)),
-})
-gradient.Rotation = 90
-gradient.Parent = panel
+local panelPadding = Instance.new("UIPadding")
+panelPadding.PaddingLeft = UDim.new(0, 10)
+panelPadding.PaddingRight = UDim.new(0, 10)
+panelPadding.PaddingTop = UDim.new(0, 8)
+panelPadding.PaddingBottom = UDim.new(0, 8)
+panelPadding.Parent = statsPanel
 
-local padding = Instance.new("UIPadding")
-padding.PaddingLeft = UDim.new(0, 20)
-padding.PaddingRight = UDim.new(0, 20)
-padding.PaddingTop = UDim.new(0, 14)
-padding.PaddingBottom = UDim.new(0, 14)
-padding.Parent = panel
+local panelLayout = Instance.new("UIListLayout")
+panelLayout.FillDirection = Enum.FillDirection.Vertical
+panelLayout.SortOrder = Enum.SortOrder.LayoutOrder
+panelLayout.Padding = UDim.new(0, 3)
+panelLayout.Parent = statsPanel
 
-local layout = Instance.new("UIListLayout")
-layout.FillDirection = Enum.FillDirection.Vertical
-layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-layout.SortOrder = Enum.SortOrder.LayoutOrder
-layout.Padding = UDim.new(0, 4)
-layout.Parent = panel
+local function createHudText(name: string, order: number, height: number, font: Enum.Font, color: Color3): TextLabel
+	local label = Instance.new("TextLabel")
+	label.Name = name
+	label.LayoutOrder = order
+	label.Size = UDim2.new(1, 0, 0, height)
+	label.BackgroundTransparency = 1
+	label.Font = font
+	label.TextColor3 = color
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = statsPanel
+	return label
+end
 
-local title = Instance.new("TextLabel")
-title.Name = "TicksValue"
-title.LayoutOrder = 1
-title.Size = UDim2.new(1, 0, 0, 48)
-title.BackgroundTransparency = 1
-title.Font = Enum.Font.GothamBold
-title.Text = "0 Ticks"
-title.TextColor3 = Color3.fromRGB(244, 208, 128)
-title.TextScaled = true
-title.Parent = panel
+local ticksValue = createHudText("TicksValue", 1, 33, Enum.Font.GothamBold, Color3.fromRGB(244, 208, 128))
+ticksValue.Text = "0 Ticks"
+ticksValue.TextScaled = true
+local ticksSize = Instance.new("UITextSizeConstraint")
+ticksSize.MinTextSize = 15
+ticksSize.MaxTextSize = 27
+ticksSize.Parent = ticksValue
 
-local titleConstraint = Instance.new("UITextSizeConstraint")
-titleConstraint.MaxTextSize = 34
-titleConstraint.MinTextSize = 18
-titleConstraint.Parent = title
+local ticksRate = createHudText("TicksPerSecond", 2, 21, Enum.Font.GothamMedium, Color3.fromRGB(213, 195, 161))
+ticksRate.Text = "+0 Ticks / second"
+ticksRate.TextScaled = true
+local rateSize = Instance.new("UITextSizeConstraint")
+rateSize.MinTextSize = 11
+rateSize.MaxTextSize = 15
+rateSize.Parent = ticksRate
 
-local rate = Instance.new("TextLabel")
-rate.Name = "TicksPerSecond"
-rate.LayoutOrder = 2
-rate.Size = UDim2.new(1, 0, 0, 28)
-rate.BackgroundTransparency = 1
-rate.Font = Enum.Font.GothamMedium
-rate.Text = "+0 Ticks / second"
-rate.TextColor3 = Color3.fromRGB(196, 181, 151)
-rate.TextSize = 18
-rate.Parent = panel
+local divider = Instance.new("Frame")
+divider.Name = "BrassRule"
+divider.LayoutOrder = 3
+divider.Size = UDim2.new(1, 0, 0, 1)
+divider.BackgroundColor3 = Color3.fromRGB(128, 82, 38)
+divider.BorderSizePixel = 0
+divider.Parent = statsPanel
 
-local upgradesList = Instance.new("ScrollingFrame")
-upgradesList.Name = "UpgradesList"
-upgradesList.AnchorPoint = Vector2.new(0.5, 0)
-upgradesList.Position = UDim2.new(0.5, 0, 0.04, 126)
-upgradesList.Size = UDim2.new(1, -24, 0.96, -142)
-upgradesList.AutomaticCanvasSize = Enum.AutomaticSize.Y
-upgradesList.CanvasSize = UDim2.fromOffset(0, 0)
-upgradesList.BackgroundTransparency = 1
-upgradesList.BorderSizePixel = 0
-upgradesList.ScrollBarImageColor3 = Color3.fromRGB(184, 137, 65)
-upgradesList.ScrollBarThickness = 6
-upgradesList.ScrollingDirection = Enum.ScrollingDirection.Y
-upgradesList.VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar
-upgradesList.Parent = screenGui
+local function createLevelRow(name: string, order: number): TextLabel
+	local label = createHudText(name .. "Level", order, 22, Enum.Font.GothamMedium, Color3.fromRGB(231, 218, 190))
+	label.Text = name .. "  Lv —"
+	label.TextScaled = true
+	local constraint = Instance.new("UITextSizeConstraint")
+	constraint.MinTextSize = 11
+	constraint.MaxTextSize = 14
+	constraint.Parent = label
+	return label
+end
 
-local upgradesListConstraint = Instance.new("UISizeConstraint")
-upgradesListConstraint.MaxSize = Vector2.new(360, 10_000)
-upgradesListConstraint.Parent = upgradesList
-
-local upgradesLayout = Instance.new("UIListLayout")
-upgradesLayout.FillDirection = Enum.FillDirection.Vertical
-upgradesLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-upgradesLayout.SortOrder = Enum.SortOrder.LayoutOrder
-upgradesLayout.Padding = UDim.new(0, 12)
-upgradesLayout.Parent = upgradesList
+local springLevel = createLevelRow("Stronger Spring", 4)
+local gearsLevel = createLevelRow("Precision Gears", 5)
 
 type UpgradeView = {
 	Title: TextLabel,
 	Level: TextLabel,
 	Cost: TextLabel,
 	Effect: TextLabel,
+	Button: TextButton,
+	ButtonStroke: UIStroke,
+	Status: TextLabel,
+	Affordable: boolean,
+	Hovering: boolean,
+	Pressed: boolean,
 }
 
 local upgradeViews: { [string]: UpgradeView } = {}
 
-local function createUpgradePanel(upgradeId: string, displayName: string, description: string, layoutOrder: number)
-	local upgradePanel = Instance.new("Frame")
-	upgradePanel.Name = upgradeId .. "Panel"
-	upgradePanel.LayoutOrder = layoutOrder
-	upgradePanel.Size = UDim2.new(1, -8, 0, 190)
-	upgradePanel.BackgroundColor3 = Color3.fromRGB(29, 24, 19)
-	upgradePanel.BorderSizePixel = 0
-	upgradePanel.Parent = upgradesList
+local function updateBuyAppearance(view: UpgradeView)
+	local button = view.Button
+	button.Active = view.Affordable
+	if not view.Affordable then
+		button.BackgroundColor3 = Color3.fromRGB(58, 48, 39)
+		button.TextColor3 = Color3.fromRGB(164, 147, 121)
+		view.ButtonStroke.Color = Color3.fromRGB(117, 91, 61)
+		view.Status.TextColor3 = Color3.fromRGB(244, 208, 128)
+	elseif view.Pressed then
+		button.BackgroundColor3 = Color3.fromRGB(124, 78, 32)
+		button.TextColor3 = Color3.fromRGB(255, 240, 205)
+		view.ButtonStroke.Color = Color3.fromRGB(203, 157, 83)
+		view.Status.TextColor3 = Color3.fromRGB(244, 208, 128)
+	elseif view.Hovering then
+		button.BackgroundColor3 = Color3.fromRGB(193, 145, 70)
+		button.TextColor3 = Color3.fromRGB(29, 24, 19)
+		view.ButtonStroke.Color = Color3.fromRGB(244, 208, 128)
+		view.Status.TextColor3 = Color3.fromRGB(244, 208, 128)
+	else
+		button.BackgroundColor3 = Color3.fromRGB(168, 116, 49)
+		button.TextColor3 = Color3.fromRGB(255, 240, 205)
+		view.ButtonStroke.Color = Color3.fromRGB(203, 157, 83)
+		view.Status.TextColor3 = Color3.fromRGB(244, 208, 128)
+	end
+end
 
-	local upgradeCorner = Instance.new("UICorner")
-	upgradeCorner.CornerRadius = UDim.new(0, 12)
-	upgradeCorner.Parent = upgradePanel
+local function createWallText(
+	parent: Instance,
+	name: string,
+	order: number,
+	height: number,
+	font: Enum.Font,
+	textSize: number,
+	color: Color3
+): TextLabel
+	local label = Instance.new("TextLabel")
+	label.Name = name
+	label.LayoutOrder = order
+	label.Size = UDim2.new(1, 0, 0, height)
+	label.BackgroundTransparency = 1
+	label.Font = font
+	label.Text = "—"
+	label.TextColor3 = color
+	label.TextSize = textSize
+	label.TextWrapped = true
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = parent
+	return label
+end
 
-	local upgradeStroke = Instance.new("UIStroke")
-	upgradeStroke.Color = Color3.fromRGB(184, 137, 65)
-	upgradeStroke.Thickness = 2
-	upgradeStroke.Transparency = 0.15
-	upgradeStroke.Parent = upgradePanel
+local function createWallView(wall: Model, upgradeId: string)
+	local row = wall:WaitForChild(upgradeId .. "Row")
+	local display = row:WaitForChild("Display") :: BasePart
+	local purchasePlate = row:WaitForChild("PurchasePlate") :: BasePart
 
-	local upgradePadding = Instance.new("UIPadding")
-	upgradePadding.PaddingLeft = UDim.new(0, 20)
-	upgradePadding.PaddingRight = UDim.new(0, 20)
-	upgradePadding.PaddingTop = UDim.new(0, 14)
-	upgradePadding.PaddingBottom = UDim.new(0, 14)
-	upgradePadding.Parent = upgradePanel
+	-- PlayerGui ownership keeps each player's levels and costs on their own wall.
+	local surfaceGui = Instance.new("SurfaceGui")
+	surfaceGui.Name = upgradeId .. "SurfaceGui"
+	surfaceGui.Adornee = display
+	surfaceGui.Face = Enum.NormalId.Front
+	surfaceGui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	surfaceGui.PixelsPerStud = 70
+	surfaceGui.LightInfluence = 0.15
+	surfaceGui.AlwaysOnTop = false
+	surfaceGui.ResetOnSpawn = false
+	surfaceGui.Parent = playerGui
 
-	local upgradeLayout = Instance.new("UIListLayout")
-	upgradeLayout.FillDirection = Enum.FillDirection.Vertical
-	upgradeLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	upgradeLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	upgradeLayout.Padding = UDim.new(0, 5)
-	upgradeLayout.Parent = upgradePanel
+	local content = Instance.new("Frame")
+	content.Name = "Content"
+	content.Size = UDim2.fromScale(1, 1)
+	content.BackgroundTransparency = 1
+	content.Parent = surfaceGui
 
-	local upgradeTitle = Instance.new("TextLabel")
-	upgradeTitle.Name = "UpgradeName"
-	upgradeTitle.LayoutOrder = 1
-	upgradeTitle.Size = UDim2.new(1, 0, 0, 28)
-	upgradeTitle.BackgroundTransparency = 1
-	upgradeTitle.Font = Enum.Font.GothamBold
-	upgradeTitle.Text = displayName
-	upgradeTitle.TextColor3 = Color3.fromRGB(244, 208, 128)
-	upgradeTitle.TextSize = 22
-	upgradeTitle.Parent = upgradePanel
+	local padding = Instance.new("UIPadding")
+	padding.PaddingLeft = UDim.new(0, 24)
+	padding.PaddingRight = UDim.new(0, 24)
+	padding.PaddingTop = UDim.new(0, 15)
+	padding.PaddingBottom = UDim.new(0, 15)
+	padding.Parent = content
 
-	local upgradeLevel = Instance.new("TextLabel")
-	upgradeLevel.Name = "UpgradeLevel"
-	upgradeLevel.LayoutOrder = 2
-	upgradeLevel.Size = UDim2.new(1, 0, 0, 20)
-	upgradeLevel.BackgroundTransparency = 1
-	upgradeLevel.Font = Enum.Font.GothamMedium
-	upgradeLevel.Text = "Level --"
-	upgradeLevel.TextColor3 = Color3.fromRGB(220, 210, 190)
-	upgradeLevel.TextSize = 17
-	upgradeLevel.Parent = upgradePanel
+	local layout = Instance.new("UIListLayout")
+	layout.FillDirection = Enum.FillDirection.Vertical
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Padding = UDim.new(0, 6)
+	layout.Parent = content
 
-	local upgradeCost = Instance.new("TextLabel")
-	upgradeCost.Name = "UpgradeCost"
-	upgradeCost.LayoutOrder = 3
-	upgradeCost.Size = UDim2.new(1, 0, 0, 20)
-	upgradeCost.BackgroundTransparency = 1
-	upgradeCost.Font = Enum.Font.GothamMedium
-	upgradeCost.Text = "Cost: --"
-	upgradeCost.TextColor3 = Color3.fromRGB(220, 210, 190)
-	upgradeCost.TextSize = 17
-	upgradeCost.Parent = upgradePanel
+	local rowTitle = createWallText(content, "UpgradeName", 1, 38, Enum.Font.GothamBold, 31, Color3.fromRGB(244, 208, 128))
+	rowTitle.Text = "LOADING UPGRADE"
 
-	local upgradeEffect = Instance.new("TextLabel")
-	upgradeEffect.Name = "UpgradeEffect"
-	upgradeEffect.LayoutOrder = 4
-	upgradeEffect.Size = UDim2.new(1, 0, 0, 20)
-	upgradeEffect.BackgroundTransparency = 1
-	upgradeEffect.Font = Enum.Font.Gotham
-	upgradeEffect.Text = description
-	upgradeEffect.TextColor3 = Color3.fromRGB(196, 181, 151)
-	upgradeEffect.TextSize = 15
-	upgradeEffect.Parent = upgradePanel
+	local rule = Instance.new("Frame")
+	rule.Name = "BrassRule"
+	rule.LayoutOrder = 2
+	rule.Size = UDim2.new(1, 0, 0, 2)
+	rule.BackgroundColor3 = Color3.fromRGB(184, 137, 65)
+	rule.BorderSizePixel = 0
+	rule.Parent = content
+
+	local rowLevel = createWallText(content, "UpgradeLevel", 3, 26, Enum.Font.GothamMedium, 23, Color3.fromRGB(231, 218, 190))
+	local rowCost = createWallText(content, "UpgradeCost", 4, 26, Enum.Font.GothamMedium, 23, Color3.fromRGB(231, 218, 190))
+	local rowEffect = createWallText(content, "UpgradeEffect", 5, 38, Enum.Font.Gotham, 20, Color3.fromRGB(206, 190, 160))
+	rowEffect.Text = "Waiting for authoritative data"
+
+	local buySurfaceGui = Instance.new("SurfaceGui")
+	buySurfaceGui.Name = upgradeId .. "BuySurfaceGui"
+	buySurfaceGui.Adornee = purchasePlate
+	buySurfaceGui.Face = Enum.NormalId.Front
+	buySurfaceGui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	buySurfaceGui.PixelsPerStud = 70
+	buySurfaceGui.LightInfluence = 0.15
+	buySurfaceGui.AlwaysOnTop = false
+	buySurfaceGui.Active = true
+	buySurfaceGui.ResetOnSpawn = false
+	buySurfaceGui.Parent = playerGui
 
 	local buyButton = Instance.new("TextButton")
 	buyButton.Name = "BuyButton"
-	buyButton.LayoutOrder = 5
-	buyButton.Size = UDim2.new(1, 0, 0, 44)
-	buyButton.BackgroundColor3 = Color3.fromRGB(139, 91, 38)
+	buyButton.AnchorPoint = Vector2.new(0.5, 0)
+	buyButton.Position = UDim2.new(0.5, 0, 0, 16)
+	buyButton.Size = UDim2.new(1, -20, 0, 118)
+	buyButton.BackgroundColor3 = Color3.fromRGB(58, 48, 39)
 	buyButton.BorderSizePixel = 0
-	buyButton.AutoButtonColor = true
+	buyButton.AutoButtonColor = false
 	buyButton.Font = Enum.Font.GothamBold
 	buyButton.Text = "BUY"
-	buyButton.TextColor3 = Color3.fromRGB(255, 239, 202)
-	buyButton.TextSize = 18
-	buyButton.Parent = upgradePanel
+	buyButton.TextColor3 = Color3.fromRGB(164, 147, 121)
+	buyButton.TextSize = 36
+	buyButton.Parent = buySurfaceGui
 
-	local buyCorner = Instance.new("UICorner")
-	buyCorner.CornerRadius = UDim.new(0, 8)
-	buyCorner.Parent = buyButton
+	local buttonCorner = Instance.new("UICorner")
+	buttonCorner.CornerRadius = UDim.new(0, 6)
+	buttonCorner.Parent = buyButton
 
-	buyButton.Activated:Connect(function()
-		-- The identifier is only a request. Cost, affordability, and results are server-owned.
-		purchaseUpgrade:FireServer(upgradeId)
-	end)
+	local buttonStroke = Instance.new("UIStroke")
+	buttonStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	buttonStroke.Color = Color3.fromRGB(203, 157, 83)
+	buttonStroke.Thickness = 2
+	buttonStroke.Parent = buyButton
 
-	upgradeViews[upgradeId] = {
-		Title = upgradeTitle,
-		Level = upgradeLevel,
-		Cost = upgradeCost,
-		Effect = upgradeEffect,
+	local buyStatus = Instance.new("TextLabel")
+	buyStatus.Name = "Affordability"
+	buyStatus.AnchorPoint = Vector2.new(0.5, 0)
+	buyStatus.Position = UDim2.new(0.5, 0, 1, -46)
+	buyStatus.Size = UDim2.new(1, -12, 0, 36)
+	buyStatus.BackgroundTransparency = 1
+	buyStatus.Font = Enum.Font.GothamBold
+	buyStatus.Text = "SYNCING"
+	buyStatus.TextColor3 = Color3.fromRGB(206, 176, 128)
+	buyStatus.TextScaled = true
+	buyStatus.Parent = buySurfaceGui
+	local statusSize = Instance.new("UITextSizeConstraint")
+	statusSize.MinTextSize = 14
+	statusSize.MaxTextSize = 20
+	statusSize.Parent = buyStatus
+
+	local view: UpgradeView = {
+		Title = rowTitle,
+		Level = rowLevel,
+		Cost = rowCost,
+		Effect = rowEffect,
+		Button = buyButton,
+		ButtonStroke = buttonStroke,
+		Status = buyStatus,
+		Affordable = false,
+		Hovering = false,
+		Pressed = false,
 	}
+	upgradeViews[upgradeId] = view
+	updateBuyAppearance(view)
+
+	buyButton.MouseEnter:Connect(function()
+		view.Hovering = true
+		updateBuyAppearance(view)
+	end)
+	buyButton.MouseLeave:Connect(function()
+		view.Hovering = false
+		view.Pressed = false
+		updateBuyAppearance(view)
+	end)
+	buyButton.MouseButton1Down:Connect(function()
+		view.Pressed = true
+		updateBuyAppearance(view)
+	end)
+	buyButton.MouseButton1Up:Connect(function()
+		view.Pressed = false
+		updateBuyAppearance(view)
+	end)
+	buyButton.Activated:Connect(function()
+		if view.Affordable then
+			-- The server still validates the identifier, cost, balance, and result.
+			purchaseUpgrade:FireServer(upgradeId)
+		end
+	end)
 end
 
-createUpgradePanel("StrongerSpring", "Stronger Spring", "+1 Tick/sec per level", 1)
-createUpgradePanel("PrecisionGears", "Precision Gears", "x1.25 Tick production per level", 2)
+local area = Workspace:WaitForChild("ClockworkUpgradeArea")
+local wall = area:WaitForChild("TickUpgradesWall") :: Model
+local upgradeIds = wall:GetAttribute("UpgradeIds")
+while type(upgradeIds) ~= "string" do
+	wall:GetAttributeChangedSignal("UpgradeIds"):Wait()
+	upgradeIds = wall:GetAttribute("UpgradeIds")
+end
+for _, upgradeId in string.split(upgradeIds, ",") do
+	createWallView(wall, upgradeId)
+end
 
 local function renderSnapshot(snapshot: any)
 	if type(snapshot) ~= "table" then
@@ -251,15 +344,15 @@ local function renderSnapshot(snapshot: any)
 		return
 	end
 
-	title.Text = NumberFormatter.Format(ticks) .. " Ticks"
-	rate.Text = "+" .. NumberFormatter.Format(ticksPerSecond) .. " Ticks / second"
+	ticksValue.Text = NumberFormatter.Format(ticks) .. " Ticks"
+	ticksRate.Text = "+" .. NumberFormatter.Format(ticksPerSecond) .. " Ticks / second"
 
 	local upgrades = snapshot.Upgrades
 	if type(upgrades) ~= "table" then
 		return
 	end
 
-	for upgradeId, upgradeView in upgradeViews do
+	for upgradeId, view in upgradeViews do
 		local upgrade = upgrades[upgradeId]
 		if type(upgrade) == "table" then
 			local level = upgrade.Level
@@ -274,10 +367,19 @@ local function renderSnapshot(snapshot: any)
 				and type(description) == "string"
 				and type(costCurrency) == "string"
 			then
-				upgradeView.Title.Text = displayName
-				upgradeView.Level.Text = "Level " .. NumberFormatter.Format(level)
-				upgradeView.Cost.Text = "Cost: " .. NumberFormatter.Format(cost) .. " " .. costCurrency
-				upgradeView.Effect.Text = description
+				view.Title.Text = string.upper(displayName)
+				view.Level.Text = "Level " .. NumberFormatter.Format(level)
+				view.Cost.Text = "Cost: " .. NumberFormatter.Format(cost) .. " " .. costCurrency
+				view.Effect.Text = description
+				local balance = currencies[costCurrency]
+				view.Affordable = type(balance) == "number" and balance >= cost
+				view.Status.Text = if view.Affordable then "READY" else "NEED " .. string.upper(costCurrency)
+				updateBuyAppearance(view)
+				if upgradeId == "StrongerSpring" then
+					springLevel.Text = "Stronger Spring  Lv " .. NumberFormatter.Format(level)
+				elseif upgradeId == "PrecisionGears" then
+					gearsLevel.Text = "Precision Gears  Lv " .. NumberFormatter.Format(level)
+				end
 			end
 		end
 	end
@@ -285,5 +387,5 @@ end
 
 economySnapshot.OnClientEvent:Connect(renderSnapshot)
 
--- This carries no economy values; it only asks the server to resend its truth.
+-- Requests only a fresh server snapshot; the client supplies no economy values.
 economySnapshot:FireServer()

@@ -11,12 +11,14 @@ local purchaseUpgrade = remotes:WaitForChild("PurchaseUpgrade") :: RemoteEvent
 local services = script.Parent:WaitForChild("Services")
 local PlayerDataService = require(services:WaitForChild("PlayerDataService"))
 local EconomyService = require(services:WaitForChild("EconomyService"))
+local KioskService = require(services:WaitForChild("KioskService"))
 local TickService = require(services:WaitForChild("TickService"))
 local UpgradeService = require(services:WaitForChild("UpgradeService"))
 
 local lastSnapshotRequest: { [Player]: number } = {}
 
 EconomyService.Init(economySnapshot)
+KioskService.Init()
 
 local function onPlayerAdded(player: Player)
 	PlayerDataService.LoadPlayer(player)

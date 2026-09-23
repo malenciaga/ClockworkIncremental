@@ -56,6 +56,7 @@ Systems beyond Paradox should be considered only after the preceding layers are 
 - Session-only data is acceptable during early development but is not a permanent constraint. Persistent Roblox DataStore-backed saving is required before public release and should be introduced as its own deliberate task.
 - Avoid unnecessary enterprise architecture or infrastructure unless actual project complexity requires it.
 - Desktop and mobile support must be considered from the beginning of UI implementation.
+- The persistent left-side HUD shows current Ticks, Ticks per second, and early upgrade levels; early upgrades are presented on one shared physical Tick Upgrades wall with player-specific displays.
 - Console-specific navigation is deliberately deferred. Future gamepad support should remain feasible.
 
 ## Brand Commitments
@@ -66,10 +67,11 @@ The product name is **Clockwork Incremental**. Its durable identity is a focused
 
 - `README.md` documents the current Ticks loop, Stronger Spring upgrade, server authority model, test expectations, and intentionally limited foundation scope.
 - `default.project.json` defines the Roblox/Rojo project structure and networking instances.
-- `src/ServerScriptService/ClockworkServer/Data/BalanceConfig.lua` is the current authority for base production and Stronger Spring balance.
+- `src/ServerScriptService/ClockworkServer/Data/BalanceConfig.lua` is the current authority for base production and upgrade balance.
 - `src/ServerScriptService/ClockworkServer/Data/PlayerDataTemplate.lua` defines the versioned player-data shape.
 - `src/ServerScriptService/ClockworkServer/Services/` contains modular player-data, economy, Tick-generation, and upgrade services.
-- `src/StarterPlayer/StarterPlayerScripts/ClockworkUI.client.lua` is the existing authoritative-snapshot UI implementation.
+- `src/StarterPlayer/StarterPlayerScripts/ClockworkUI.client.lua` renders the authoritative HUD and player-specific upgrade-wall displays.
+- `src/ServerScriptService/ClockworkServer/Services/KioskService.lua` constructs the Rojo-tracked physical upgrade wall; `ClockworkUI.client.lua` adds player-specific BUY buttons that request purchases through the authoritative upgrade service.
 - No testimonials, player research, public performance claims, launch metrics, or production persistence implementation are currently present. Future work must not fabricate them.
 
 ## Product Principles

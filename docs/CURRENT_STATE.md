@@ -7,7 +7,8 @@
 - Precision Gears can be purchased to multiply total Tick production.
 - The economy is server-authoritative.
 - The project syncs through Rojo.
-- A basic Clockwork economy and upgrade UI is present.
+- A compact left-side HUD shows Ticks, Ticks per second, and both upgrade levels.
+- Stronger Spring and Precision Gears are purchased using per-player clickable BUY buttons on a single in-world Tick Upgrades wall with vertically segmented rows.
 
 ## Current limitations
 
